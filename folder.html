@@ -4,511 +4,187 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Folder View</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="icon" href="/assets/logo.webp" type="image/webp">
-    <meta property="og:title" content="Folder View - QuickShare">
-    <meta property="og:description" content="View shared files">
-    <meta property="og:image" content="/assets/logo.webp">
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Folder View - QuickShare">
-    <meta name="twitter:description" content="View shared files">
-    <meta name="twitter:image" content="/assets/logo.webp">
-    <style>
-        :root {
-            --primary: #6366f1; /* Indigo */
-            --primary-hover: #4f46e5;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            --radius: 12px;
-            --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            padding: 2rem 1rem;
-            line-height: 1.5;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .back-btn {
-            background: white;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .back-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: rgba(99, 102, 241, 0.05);
-        }
-
-        /* --- Grid Layout --- */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .item {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .item:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary);
-        }
-
-        .media-preview {
-            width: 100%;
-            height: 200px;
-            background-color: #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        .media-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Keeps images whole */
-            transition: transform 0.3s ease;
-        }
-
-        .item:hover .media-preview img {
-            transform: scale(1.05);
-        }
-
-        .file-icon {
-            font-size: 4rem;
-            color: var(--text-muted);
-            opacity: 0.5;
-        }
-
-        .item-info {
-            padding: 1rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .file-name {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-main);
-            word-break: break-all;
-            margin-bottom: 0.75rem;
-            line-height: 1.3;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .action-group {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            background: white;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-
-        .action-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        /* --- Lightbox --- */
-        .lightbox {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.2s ease, visibility 0.2s ease;
-        }
-
-        .lightbox.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .lightbox-content {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            max-width: 100%;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .lightbox-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-        }
-
-        .lightbox-title {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-right: 1rem;
-        }
-
-        .lightbox-close {
-            background: transparent;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 0.25rem;
-            line-height: 1;
-            border-radius: 4px;
-            transition: color 0.2s, background 0.2s;
-        }
-
-        .lightbox-close:hover {
-            color: var(--error);
-            background: #fee2e2;
-        }
-
-        .lightbox-body {
-            padding: 0;
-            background: #000; /* Dark bg for image contrast */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 200px;
-            max-height: 80vh;
-        }
-
-        .lightbox-img {
-            max-width: 100%;
-            max-height: 80vh;
-            object-fit: contain;
-        }
-
-        /* --- Empty State --- */
-        .empty-state {
-            text-align: center;
-            padding: 4rem 1rem;
-            color: var(--text-muted);
-        }
-        .empty-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        /* --- Mobile Adjustments --- */
-        @media (max-width: 600px) {
-            .grid {
-                grid-template-columns: 1fr; /* Stack on mobile */
-            }
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .back-btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
 </head>
 <body>
 
     <div class="container">
-        <header>
-            <h1 id="title">Folder View</h1>
-            <a href="javascript:history.back()" class="back-btn">← Go Back</a>
+        <header class="header flex-between" style="margin-bottom: 2rem;">
+            <h1 id="title" style="margin:0;">Folder View</h1>
+            <a href="javascript:history.back()" class="btn btn-outline">← Go Back</a>
         </header>
 
-        <div class="grid" id="grid"></div>
-    </div>
-
-    <!-- Lightbox -->
-    <div id="lightbox" class="lightbox" aria-hidden="true">
-        <div class="lightbox-content">
-            <div class="lightbox-header">
-                <span id="lightboxTitle" class="lightbox-title">Filename.jpg</span>
-                <button id="lightboxClose" class="lightbox-close" type="button">&times;</button>
-            </div>
-            <div class="lightbox-body">
-                <img id="lightboxImg" class="lightbox-img" alt="" />
-            </div>
+        <div class="grid-responsive" id="grid">
+            <!-- Grid Items -->
         </div>
     </div>
 
-    <script>
-        // --- Constants & State ---
-        const hash = location.hash.slice(1);
-        let files = [];
-        const IDX_TO_EXT = ['jpg', 'png', 'gif', 'webp'];
+    <div id="lightbox" class="overlay">
+        <div class="lightbox-content">
+            <button id="lightboxClose" class="lightbox-close">&times;</button>
+            <img id="lightboxImg" class="lightbox-img" alt="Preview" />
+        </div>
+    </div>
+    
+    <div class="snackbar" id="snackbar"></div>
 
-        // --- DOM Elements ---
+    <script>
+        // --- Elements ---
+        const hash = location.hash.slice(1);
         const grid = document.getElementById('grid');
         const title = document.getElementById('title');
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightboxImg');
-        const lightboxTitle = document.getElementById('lightboxTitle');
         const lightboxClose = document.getElementById('lightboxClose');
+        const snackbar = document.getElementById('snackbar');
 
-        // --- Decoding Logic (Preserved) ---
+        // --- Config ---
+        let files = [];
+        const IDX_TO_EXT = ['jpg', 'png', 'gif', 'webp', 'txt']; // Index mapping
+
+        // --- Decoding Logic ---
         function tryDecodeCompact(h) {
             try {
+                // Replace URL-safe base64 chars
                 const b64 = h.replace(/-/g, '+').replace(/_/g, '/');
                 const bin = atob(b64);
+                
+                // Each file entry is 7 bytes: 6 bytes hex ID + 1 byte type index
                 if (bin.length === 0 || bin.length % 7 !== 0) return null;
+
                 const out = [];
                 for (let i = 0; i < bin.length; i += 7) {
                     let hex = '';
+                    // Convert first 6 chars back to hex string
                     for (let j = 0; j < 6; j++) {
                         hex += bin.charCodeAt(i + j).toString(16).padStart(2, '0');
                     }
+                    // Get extension from 7th char
                     const extIdx = bin.charCodeAt(i + 6);
-                    const ext = IDX_TO_EXT[extIdx] || 'jpg';
+                    const ext = IDX_TO_EXT[extIdx] || 'jpg'; // Default to jpg if unknown
                     out.push(`${hex}.${ext}`);
                 }
                 return out;
-            } catch { return null; }
+            } catch (e) {
+                console.error("Decoding failed", e);
+                return null;
+            }
         }
 
-        function tryDecodeLegacy(h) {
-            try {
-                const decoded = atob(h.replace(/-/g, '+').replace(/_/g, '/'));
-                if (!decoded.includes('|') && !decoded.includes('.')) return null;
-                return decoded.split('|');
-            } catch { return null; }
+        // --- Initialize Files ---
+        // 1. Try compact decoding (Base64)
+        if (hash) {
+            const decoded = tryDecodeCompact(hash);
+            if (decoded) {
+                files = decoded;
+            } else {
+                // 2. Fallback: Legacy "+" separation (if used previously)
+                files = hash.split('+').filter(f => f.length > 0);
+            }
         }
 
-        // --- Initialization ---
-        if (hash.includes('+')) {
-            files = hash.split('+');
-        } else {
-            files = tryDecodeCompact(hash) || tryDecodeLegacy(hash) || [];
-        }
+        // Filter valid filenames (basic check: 12 char hex + ext)
+        files = files.filter(f => /^[a-f0-9]{12}\.[a-z0-9]+$/i.test(f));
 
-        // Filter valid hashes (12 hex chars + extension)
-        // Updated Regex to be slightly more permissive for extensions since we support all files now
-        const allowed = /^[a-f0-9]{12}\.([a-z0-9]+)$/i;
-        files = files.filter(f => typeof f === 'string' && allowed.test(f));
-
-        title.textContent = files.length > 0 ? `Folder View (${files.length} files)` : 'Folder View';
+        // Render
+        title.textContent = files.length ? `Folder View (${files.length} files)` : 'Folder View (Empty)';
         renderGrid();
 
-        // --- Rendering ---
         function renderGrid() {
             grid.innerHTML = '';
-
-            if (files.length === 0) {
+            
+            if (!files.length) {
                 grid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1 / -1;">
-                        <span class="empty-icon">📭</span>
-                        <h3>No files found</h3>
-                        <p>This folder might be empty or the link is invalid.</p>
+                    <div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-muted);">
+                        <div style="font-size:3rem; margin-bottom:1rem;">📭</div>
+                        <h3>No files found or invalid link.</h3>
                     </div>
                 `;
                 return;
             }
 
             files.forEach(f => {
-                const fileUrl = `/public/${encodeURIComponent(f)}`;
-                const ext = f.split('.').pop().toLowerCase();
-                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
+                // Assuming files are served from /public/ directory relative to root
+                // Use absolute path to ensure it works if folder.html is in root or subdirectory
+                const url = `${window.location.origin}/public/${f}`;
+                
+                const isImg = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(f);
                 
                 const item = document.createElement('div');
-                item.className = 'item';
+                item.className = 'card grid-item';
                 
-                // Preview Area
                 const preview = document.createElement('div');
                 preview.className = 'media-preview';
                 
-                if (isImage) {
+                if (isImg) {
                     const img = document.createElement('img');
-                    img.src = fileUrl;
+                    img.src = url; 
                     img.alt = f;
-                    img.loading = 'lazy';
+                    img.loading = "lazy";
+                    img.onclick = () => openLightbox(url);
                     preview.appendChild(img);
-                    
-                    // Click image to open lightbox
-                    img.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openLightbox(fileUrl, f);
-                    });
                 } else {
-                    // Generic Icon for non-images
-                    const icon = document.createElement('div');
-                    icon.className = 'file-icon';
-                    // Simple logic for icon based on extension
-                    if (ext === 'pdf') icon.textContent = '📄';
-                    else if (['zip', 'rar', '7z'].includes(ext)) icon.textContent = '📦';
-                    else if (['mp4', 'mov', 'webm'].includes(ext)) icon.textContent = '🎬';
-                    else icon.textContent = '📁';
-                    
-                    preview.appendChild(icon);
+                    // Generic file icon
+                    preview.innerHTML = `<div style="font-size:3rem; opacity:0.5;">📄</div>`;
                 }
 
-                // Info Area
                 const info = document.createElement('div');
-                info.className = 'item-info';
+                info.style.padding = '1rem';
+                info.innerHTML = `
+                    <div class="item-title" title="${f}" style="margin-bottom:0.75rem;">${f}</div>
+                    <div class="input-group">
+                        <a href="${url}" target="_blank" class="btn btn-outline btn-sm" style="flex:1">Open</a>
+                        <button class="btn btn-outline btn-sm copy-btn" style="flex:1">Copy</button>
+                    </div>
+                `;
 
-                const name = document.createElement('div');
-                name.className = 'file-name';
-                name.textContent = f;
-                name.title = f;
-
-                const actions = document.createElement('div');
-                actions.className = 'action-group';
-
-                // Open Button
-                const openBtn = document.createElement('a');
-                openBtn.className = 'action-btn';
-                openBtn.href = fileUrl;
-                openBtn.target = '_blank';
-                openBtn.textContent = 'Open';
-
-                // Copy Button
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'action-btn';
-                copyBtn.textContent = 'Copy Link';
-                copyBtn.onclick = async (e) => {
-                    e.stopPropagation();
-                    try {
-                        // Construct absolute URL
-                        const absoluteUrl = new URL(fileUrl, window.location.href).href;
-                        await navigator.clipboard.writeText(absoluteUrl);
-                        const original = copyBtn.textContent;
-                        copyBtn.textContent = 'Copied!';
-                        setTimeout(() => copyBtn.textContent = original, 2000);
-                    } catch (err) {
-                        console.error(err);
-                    }
+                info.querySelector('.copy-btn').onclick = () => {
+                     navigator.clipboard.writeText(url);
+                     showSnackbar('Link copied!');
                 };
 
-                actions.appendChild(openBtn);
-                actions.appendChild(copyBtn);
-                info.appendChild(name);
-                info.appendChild(actions);
-                
                 item.appendChild(preview);
                 item.appendChild(info);
                 grid.appendChild(item);
             });
         }
 
-        // --- Lightbox Logic ---
-        function openLightbox(src, titleText) {
+        // --- Lightbox Functions ---
+        function openLightbox(src) {
             lightboxImg.src = src;
-            lightboxImg.alt = titleText || 'Image';
-            lightboxTitle.textContent = titleText || '';
             lightbox.classList.add('show');
-            lightbox.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden'; // Prevent background scrolling
         }
-
+        
         function closeLightbox() {
             lightbox.classList.remove('show');
-            lightbox.setAttribute('aria-hidden', 'true');
-            setTimeout(() => { lightboxImg.src = ''; }, 200); // Clear src after transition
             document.body.style.overflow = '';
+            setTimeout(() => {
+                lightboxImg.src = '';
+            }, 200); // Clear src after fade out
         }
 
-        lightboxClose.addEventListener('click', closeLightbox);
+        lightboxClose.onclick = closeLightbox;
+        
+        lightbox.onclick = (e) => {
+            if (e.target === lightbox || e.target.classList.contains('lightbox-content')) {
+                closeLightbox();
+            }
+        };
 
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) closeLightbox();
-        });
-
+        // Escape key to close
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && lightbox.classList.contains('show')) closeLightbox();
+            if (e.key === 'Escape' && lightbox.classList.contains('show')) {
+                closeLightbox();
+            }
         });
+        
+        function showSnackbar(msg) {
+            snackbar.textContent = msg;
+            snackbar.classList.add('show');
+            setTimeout(() => snackbar.classList.remove('show'), 2000);
+        }
     </script>
 </body>
 </html>
