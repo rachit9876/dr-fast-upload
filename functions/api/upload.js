@@ -23,12 +23,12 @@ export async function onRequestPost({ request, env }) {
         const lower = filename.toLowerCase();
         const ext = lower.includes('.') ? lower.slice(lower.lastIndexOf('.')) : '';
         const allowedExt = new Set([
-            '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg',
-            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
-            '.txt', '.csv', '.json', '.xml', '.html', '.css', '.js',
-            '.zip', '.rar', '.7z', '.tar', '.gz',
-            '.mp4', '.mp3', '.wav', '.avi', '.mov',
-            '.md', '.rtf'
+            '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico', '.tiff', '.tif',
+            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp',
+            '.txt', '.csv', '.json', '.xml', '.html', '.css', '.js', '.yaml', '.yml', '.toml',
+            '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2',
+            '.mp4', '.mp3', '.wav', '.avi', '.mov', '.mkv', '.flac', '.ogg',
+            '.md', '.rtf', '.tex', '.log'
         ]);
         if (!allowedExt.has(ext)) {
             return new Response(JSON.stringify({ success: false, error: 'Unsupported file type' }),

@@ -298,7 +298,7 @@
     <div class="container">
         <header>
             <h1 id="title">Folder View</h1>
-            <a href="javascript:history.back()" class="back-btn">← Go Back</a>
+            <a href="/" class="back-btn">← Go Back</a>
         </header>
 
         <div class="grid" id="grid"></div>
@@ -414,7 +414,7 @@
                 const fileUrl = `${FILE_BASE_PATH}${encodeURIComponent(f)}`;
                 
                 const ext = f.split('.').pop().toLowerCase();
-                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
+                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif'].includes(ext);
                 
                 const item = document.createElement('div');
                 item.className = 'item';
