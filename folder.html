@@ -245,13 +245,13 @@
         }
 
         .lightbox-close:hover {
-            color: var(--error);
+            color: #ef4444;
             background: #fee2e2;
         }
 
         .lightbox-body {
             padding: 0;
-            background: #000; /* Dark bg for image contrast */
+            background: #000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -280,7 +280,7 @@
         /* --- Mobile Adjustments --- */
         @media (max-width: 600px) {
             .grid {
-                grid-template-columns: 1fr; /* Stack on mobile */
+                grid-template-columns: 1fr;
             }
             header {
                 flex-direction: column;
@@ -318,10 +318,19 @@
     </div>
 
     <script>
-        // --- Constants & State ---
+        // --- Configuration ---
+        // IMPORTANT: This must match the directory where your files are actually hosted.
+        // If using the mock logic from the previous index.html, files are at '/i/'.
+        // Change to '/public/' if your server stores files there.
+        const FILE_BASE_PATH = '/i/'; 
+
+        // --- State ---
         const hash = location.hash.slice(1);
         let files = [];
-        const IDX_TO_EXT = ['jpg', 'png', 'gif', 'webp'];
+        
+        // FIX: Updated IDX_TO_EXT to match encoder priority. 
+        // Encoder maps jpeg to 0, so we must decode 0 as jpeg to preserve extension if server supports it.
+        const IDX_TO_EXT = ['jpeg', 'png', 'gif', 'webp'];
 
         // --- DOM Elements ---
         const grid = document.getElementById('grid');
@@ -331,7 +340,7 @@
         const lightboxTitle = document.getElementById('lightboxTitle');
         const lightboxClose = document.getElementById('lightboxClose');
 
-        // --- Decoding Logic (Preserved) ---
+        // --- Decoding Logic ---
         function tryDecodeCompact(h) {
             try {
                 const b64 = h.replace(/-/g, '+').replace(/_/g, '/');
@@ -360,16 +369,27 @@
         }
 
         // --- Initialization ---
-        if (hash.includes('+')) {
+        if (!hash) {
+            files = [];
+        } else if (hash.includes('+')) {
+            // Old simple format
             files = hash.split('+');
         } else {
-            files = tryDecodeCompact(hash) || tryDecodeLegacy(hash) || [];
+            // Try Compact first
+            files = tryDecodeCompact(hash);
+            
+            // Fallback to Legacy if compact failed
+            if (!files || files.length === 0) {
+                files = tryDecodeLegacy(hash);
+            }
+            
+            if (!files) files = [];
         }
 
-        // Filter valid hashes (12 hex chars + extension)
-        // Updated Regex to be slightly more permissive for extensions since we support all files now
-        const allowed = /^[a-f0-9]{12}\.([a-z0-9]+)$/i;
-        files = files.filter(f => typeof f === 'string' && allowed.test(f));
+        // FIX: Removed the strict regex filter that was deleting Legacy files.
+        // The Compact decoder already guarantees structure, and Legacy files have real names.
+        // We just ensure we have an array of strings.
+        files = Array.isArray(files) ? files.filter(f => typeof f === 'string' && f.length > 0) : [];
 
         title.textContent = files.length > 0 ? `Folder View (${files.length} files)` : 'Folder View';
         renderGrid();
@@ -390,7 +410,9 @@
             }
 
             files.forEach(f => {
-                const fileUrl = `/public/${encodeURIComponent(f)}`;
+                // Use the configured base path
+                const fileUrl = `${FILE_BASE_PATH}${encodeURIComponent(f)}`;
+                
                 const ext = f.split('.').pop().toLowerCase();
                 const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
                 
@@ -406,6 +428,16 @@
                     img.src = fileUrl;
                     img.alt = f;
                     img.loading = 'lazy';
+                    
+                    // Handle broken images gracefully
+                    img.onerror = function() {
+                        this.style.display='none';
+                        const errDiv = document.createElement('div');
+                        errDiv.className = 'file-icon';
+                        errDiv.textContent = '⚠️';
+                        preview.appendChild(errDiv);
+                    };
+                    
                     preview.appendChild(img);
                     
                     // Click image to open lightbox
@@ -417,7 +449,6 @@
                     // Generic Icon for non-images
                     const icon = document.createElement('div');
                     icon.className = 'file-icon';
-                    // Simple logic for icon based on extension
                     if (ext === 'pdf') icon.textContent = '📄';
                     else if (['zip', 'rar', '7z'].includes(ext)) icon.textContent = '📦';
                     else if (['mp4', 'mov', 'webm'].includes(ext)) icon.textContent = '🎬';
@@ -452,7 +483,6 @@
                 copyBtn.onclick = async (e) => {
                     e.stopPropagation();
                     try {
-                        // Construct absolute URL
                         const absoluteUrl = new URL(fileUrl, window.location.href).href;
                         await navigator.clipboard.writeText(absoluteUrl);
                         const original = copyBtn.textContent;
@@ -481,13 +511,13 @@
             lightboxTitle.textContent = titleText || '';
             lightbox.classList.add('show');
             lightbox.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
         }
 
         function closeLightbox() {
             lightbox.classList.remove('show');
             lightbox.setAttribute('aria-hidden', 'true');
-            setTimeout(() => { lightboxImg.src = ''; }, 200); // Clear src after transition
+            setTimeout(() => { lightboxImg.src = ''; }, 200);
             document.body.style.overflow = '';
         }
 
