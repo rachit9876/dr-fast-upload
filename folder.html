@@ -327,11 +327,6 @@
         // --- State ---
         const hash = location.hash.slice(1);
         let files = [];
-        
-        // FIX: Updated IDX_TO_EXT to match encoder priority. 
-        // Encoder maps jpeg to 0, so we must decode 0 as jpeg to preserve extension if server supports it.
-        const IDX_TO_EXT = ['jpeg', 'png', 'gif', 'webp'];
-
         // --- DOM Elements ---
         const grid = document.getElementById('grid');
         const title = document.getElementById('title');
@@ -342,29 +337,13 @@
 
         // --- Decoding Logic ---
         function tryDecodeCompact(h) {
-            try {
-                const b64 = h.replace(/-/g, '+').replace(/_/g, '/');
-                const bin = atob(b64);
-                if (bin.length === 0 || bin.length % 7 !== 0) return null;
-                const out = [];
-                for (let i = 0; i < bin.length; i += 7) {
-                    let hex = '';
-                    for (let j = 0; j < 6; j++) {
-                        hex += bin.charCodeAt(i + j).toString(16).padStart(2, '0');
-                    }
-                    const extIdx = bin.charCodeAt(i + 6);
-                    const ext = IDX_TO_EXT[extIdx] || 'jpg';
-                    out.push(`${hex}.${ext}`);
-                }
-                return out;
-            } catch { return null; }
+            return null; // Old format no longer supported
         }
 
         function tryDecodeLegacy(h) {
             try {
                 const decoded = atob(h.replace(/-/g, '+').replace(/_/g, '/'));
-                if (!decoded.includes('|') && !decoded.includes('.')) return null;
-                return decoded.split('|');
+                return decoded.split('|').filter(f => f.length > 0);
             } catch { return null; }
         }
 
@@ -375,15 +354,7 @@
             // Old simple format
             files = hash.split('+');
         } else {
-            // Try Compact first
-            files = tryDecodeCompact(hash);
-            
-            // Fallback to Legacy if compact failed
-            if (!files || files.length === 0) {
-                files = tryDecodeLegacy(hash);
-            }
-            
-            if (!files) files = [];
+            files = tryDecodeLegacy(hash) || tryDecodeCompact(hash) || [];
         }
 
         // FIX: Removed the strict regex filter that was deleting Legacy files.
