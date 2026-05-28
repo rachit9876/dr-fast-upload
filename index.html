@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Uploader</title>
+    <style>
+        body { font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f5; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
+        input[type="file"] { margin-bottom: 1rem; width: 100%; }
+        button { background: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #result { margin-top: 1rem; font-size: 0.9rem; word-break: break-all; }
+        a { color: #2563eb; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Upload File</h2>
+        <input type="file" id="fileInput">
+        <button id="uploadBtn">Upload</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const resultDiv = document.getElementById('result');
+
+        uploadBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) return alert('Please select a file first.');
+            if (file.size > 24 * 1024 * 1024) return alert('File too large (Max 24MB).');
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            resultDiv.innerHTML = '';
+
+            try {
+                // Read as Base64
+                const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+
+                // Send to API
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: file.name, content: base64 })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    const status = data.cached ? '♻️ Already Exists!' : '✅ Uploaded!';
+                    resultDiv.innerHTML = `${status}<br><br><a href="${data.url}" target="_blank">${data.url}</a>`;
+                } else {
+                    resultDiv.innerHTML = `❌ Error: ${data.error}`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `❌ Connection Error`;
+            }
+
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload';
+            fileInput.value = ''; // Reset
+        });
+    </script>
+</body>
+</html>
